@@ -101,14 +101,13 @@ def buscar_implicantes_unicos(tabla):
                 implicantes_unicos.append(tabla[i][0])
 
     return implicantes_unicos
-#----------------------------------------------------
 def ingresar_minterminos():
     print("\nQUINE MCCLUSKEY\n")
     print("Ingrese los términos separados por un espacio. \n")
     mt = [int(i) for i in input("Ingrese los mintérminos: ").strip().split()]
     mt.sort()  # Ordenamos los minterminos
     return mt
-#--------------------------------------------------
+#-----------------------------------------------------
 def agrupar_minterminos(minterminos):
     max_minterm = len(bin(minterminos[-1])) - 2
     grupos = {}
@@ -123,41 +122,108 @@ def agrupar_minterminos(minterminos):
             grupos[count] = [minterm_str]
 
     return grupos
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mt = ingresar_minterminos()
+#---------------------------------------
+minterminos = mt
+max_minterm = len(bin(minterminos[-1]))-2
+grupos = agrupar_minterminos(minterminos)
+implicantes = set()
 
-def encontrar_implicantes_primos(grupos):
-    implicantes = set()
+# Comenzamos la agrupación primaria
+# agrupar_minterminos
+'''
+    Contamos el número de unos en cada mintermino, luego guardamos el equivalente binario desde la posicion 2 para evitar '0b' que agrega la funcion
+    seguido lo metemos en una cadena y rellenamos con ceros a la izquierda equivalentes al mintermino más grande. Despues validamos si ya existe
+    una clave con ese número de unos, si ya existe simplemente agregamos el mintermino al grupo con esa clave, de lo contrario se crea la clave y
+    se introduce de igual manera.
+'''
+# for minterm in minterminos:
+#     count = bin(minterm).count('1')
+#     minterm_str = bin(minterm)[2:].zfill(max_minterm)
 
-    while True:
-        temporal = grupos.copy()
-        grupos = {}
-        n = 0
-        marcados = set()
-        debo_parar = True
-        lclaves = sorted(list(temporal.keys()))
-        
-        for i in range(len(lclaves) - 1):
-            for j in temporal[lclaves[i]]:
-                for k in temporal[lclaves[i + 1]]:
-                    cambio = diferencias(j, k)
-                    if cambio[0]:
-                        minterm_cambio = j[:cambio[1]] + '-' + j[cambio[1] + 1:]
-                        if n in grupos:
-                            if minterm_cambio not in grupos[n]:
-                                grupos[n].append(minterm_cambio)
-                        else:
-                            grupos[n] = [minterm_cambio]
-                        debo_parar = False
-                        marcados.add(j)
-                        marcados.add(k)
+#     if count in grupos:
+#         grupos[count].append(minterm_str)
+#     else:
+#         grupos[count] = [minterm_str]
+# Término de la agrupación primaria
 
-            n += 1
+# Proceso para crear las tablas y encontrar los implicantes primos 
+while True:
+    temporal = grupos.copy()
+    grupos = {}
+    n = 0
+    marcados = set()
+    debo_parar = True
+    lclaves = sorted(list(temporal.keys()))
+    for i in range(len(lclaves)-1):
+        for j in temporal[lclaves[i]]: # Iteración a través del grupo de elementos actual 
+            for k in temporal[lclaves[i+1]]: # Iteración a través del siguiente grupo de elementos
+                cambio = diferencias(j,k) # Comparamos los mintérminos
+                if cambio[0]: # Si los mintérminos difieren solamente en un bit
+                    minterm_cambio = j[:cambio[1]] + '-' + j[cambio[1]+1:]
+                    if n in grupos:
+                        if minterm_cambio not in grupos[n]:
+                            grupos[n].append(minterm_cambio)
+                    else:
+                        grupos[n] = [minterm_cambio]
+                    debo_parar = False
+                    marcados.add(j) # Marca el elemento j
+                    marcados.add(k) # Marca el elemento k
 
-        desmarcados_local = set(recorta(temporal)).difference(marcados)
-        implicantes = implicantes.union(desmarcados_local)
-        if debo_parar:
-            break
+        n += 1
+    desmarcados_local = set(recorta(temporal)).difference(marcados) # Desmarcamos los elementos de cada tabla
+    implicantes = implicantes.union(desmarcados_local) # Agregamos el implicante primo a la lista.
+    if debo_parar: # Si los mintérminos no pueden ser combinados
+        break #Detenemos el ciclo
+'''
+    El fragmento de código es un bucle que itera sobre la lista de implicantes. Para cada implicante genera una lista de minterminos mezclados
+    llamando a la función buscaMinterminos. Luego, verifica si cada mintermino de la lista ya existe en el diccionario de tabla.
+    Si es así, agrega el implicante a la lista de valores para esa clave. Si el mintermino no existe, crea un nuevo par clave-valor en el diccionario
+    de tabla con el mintermino valor y el implicante como clave.
+'''
 
-    return implicantes
+tabla = {}
+for i in implicantes:
+    minterminos_mezclados = buscaMinterminos(i)
+    for j in minterminos_mezclados:
+        if j in tabla:
+            if i not in tabla[j]:
+                tabla[j].append(i)
+        else:
+            tabla[j] = [i]
+
+"""
+    Este fragmento de código busca elementos únicos y compartidos en dos listas.
+
+    Entradas:
+    - implicantes_unicos: Una lista de elementos únicos.
+    - dos_implicantes: Una lista de elementos con exactamente dos elementos.
+    - tabla: Diccionario que representa una tabla con claves como nombres de columnas y valores como listas de implicantes en cada columna.
+
+    Salidas:
+    - compartidos: Conjunto que contiene los elementos de dos_implicantes que tienen al menos un elemento en implicantes_unicos.
+    - independientes: Conjunto que contiene los elementos de dos_implicantes que no tienen ningún elemento en implicantes_unicos.
+
+"""
+implicantes_unicos = buscar_implicantes_unicos(tabla)
+
+reducir_tabla = {}
+for i in tabla:
+    for j in implicantes_unicos:
+        if j in tabla[i]:
+            reducir_tabla[i] = tabla[i]
+
+nueva_tabla = {}
+for i in tabla:
+    if i not in reducir_tabla:
+        nueva_tabla[i] = tabla[i]
+
+dos_marcas = []
+for i in nueva_tabla:
+    if len(nueva_tabla[i]) == 2:
+        dos_marcas.append(int(i))
+dos_marcas.sort()
 
 def marcar_todos(dos, tabla, confirmados):
     if len(tabla) > 0:
@@ -180,7 +246,7 @@ def marcar_todos(dos, tabla, confirmados):
                 nueva_tabla.pop(y)
             elif int(y) == -1 and int(x) > 0:
                 confirmados.add(opciones[0])
-                nueva_tabla.pop(x)
+                nueva_tabla.pop(x)       
             elif len(tabla[str(x)]) > len(tabla[str(y)]):
                 confirmados.add(opciones[0])
                 nueva_tabla.pop(x)
@@ -188,49 +254,30 @@ def marcar_todos(dos, tabla, confirmados):
                 confirmados.add(opciones[1])
                 nueva_tabla.pop(y)
             temporal.discard(i)
-            nueva_tabla.pop(str(i))
-            marcar_todos(list(temporal), nueva_tabla, confirmados)
+            nueva_tabla.pop(str(i))    
+            marcar_todos(list(temporal),nueva_tabla,confirmados)
             break
-    return confirmados
+    return confirmados    
+    
+complemento = set()
+marcar_todos(dos_marcas, nueva_tabla, complemento)
 
-def main():
-    minterminos = ingresar_minterminos()
-    grupos = agrupar_minterminos(minterminos)
-    implicantes_primos = encontrar_implicantes_primos(grupos)
+formula_final = list(complemento)+implicantes_unicos
+formato_ecuacion = []
+for i in range(len(formula_final)):
+    formato_ecuacion.append(convertir(formula_final[i]))
+    
+#VAMOS A IMPRIMIR EL RESULTADO
+print("\nSOLUCION: \n")
+for i in range(len(formato_ecuacion)):
+    for j in formato_ecuacion[i]:
+        print(j, end = '')
+    if i < len(formato_ecuacion)-1:
+        print(" + ", end = '')    
+print("\n")
 
-    tabla = {}
-    for i in implicantes_primos:
-        minterminos_mezclados = buscaMinterminos(i)
-        for j in minterminos_mezclados:
-            if j in tabla:
-                if i not in tabla[j]:
-                    tabla[j].append(i)
-            else:
-                tabla[j] = [i]
-
-    implicantes_unicos = buscar_implicantes_unicos(tabla)
-
-    complemento = set()
-    dos_marcas = []
-    for i in tabla:
-        if len(tabla[i]) == 2:
-            dos_marcas.append(int(i))
-    dos_marcas.sort()
-
-    marcar_todos(dos_marcas, tabla, complemento)
-
-    formula_final = list(complemento) + implicantes_unicos
-    formato_ecuacion = []
-    for i in range(len(formula_final)):
-        formato_ecuacion.append(convertir(formula_final[i]))
-
-    print("\nSOLUCION: \n")
-    for i in range(len(formato_ecuacion)):
-        for j in formato_ecuacion[i]:
-            print(j, end='')
-        if i < len(formato_ecuacion) - 1:
-            print(" + ", end='')
-    print("\n")
-
-
-main()
+#EJEMPLOS DE ENTRADAS
+#Tambien se pueden ingresar en desorden, es indiferente.
+# 1 2 3 4 5
+# 1 4 6 7 8 9 10 11 15
+# 0 1 3 4 6 7 9 10 11 12 15 16 23 24 25 26 27

@@ -192,6 +192,7 @@ print("\nQUINE MCCLUSKEY\n")
 print("ingrese los términos separados por un espacio. \n")
 mt = [int(i) for i in input("Ingrese los mintérminos: ").strip().split()]
 mt.sort() #Ordenamos los minterminos
+#---------------------------------------
 minterminos = mt
 max_minterm = len(bin(minterminos[-1]))-2
 grupos = {}
