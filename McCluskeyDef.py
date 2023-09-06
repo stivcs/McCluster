@@ -197,22 +197,29 @@ def marcar_todos(dos, tabla, confirmados):
             # Se rompe el bucle para evitar procesar 'dos' nuevamente
             break
     return confirmados
+
+#---------------------------------------------------------------------------------------------------
+def es_entero(numero):
+    try:
+        int(numero)
+        return True
+    except ValueError:
+        return False
 #------------------------------------------------------------------------------------------------------
-def main():
-    # Definición de una función interna llamada 'calcular' para realizar el cálculo principal.
-    def calcular():
-        # Leer los minterminos desde la entrada del usuario, convertirlos a una lista de enteros y ordenarlos.
-        mt = [int(i) for i in input_entry.get().strip().split()]
-        mt.sort()
-        minterminos = mt
+def calcular():
+    mt_input = input_entry.get().strip()
+    if mt_input:
+        minterminos = []
+        for token in mt_input.split():
+            if es_entero(token):
+                minterminos.append(int(token))
+            else:
+                result_label.config(text="Por favor, ingrese Datos validos")
+                return  # Salir de la función si se ingresa un valor no válido
+        minterminos.sort()
+        # minterminos = mt
         implicantes = set()
-
-        # Comenzar la agrupación primaria
-        # agrupar_minterminos
         grupos = agrupar_minterminos(minterminos)
-        # Fin de la agrupación primaria
-
-        # Proceso para crear las tablas y encontrar los implicantes primos 
         while True:
             temporal = grupos.copy()
             grupos = {}
@@ -221,10 +228,10 @@ def main():
             debo_parar = True
             lclaves = sorted(list(temporal.keys()))
             for i in range(len(lclaves)-1):
-                for j in temporal[lclaves[i]]: # Iteración a través del grupo de elementos actual 
-                    for k in temporal[lclaves[i+1]]: # Iteración a través del siguiente grupo de elementos
-                        cambio = diferencias(j,k) # Comparamos los minterminos
-                        if cambio[0]: # Si los minterminos difieren solamente en un bit
+                for j in temporal[lclaves[i]]:
+                    for k in temporal[lclaves[i+1]]:
+                        cambio = diferencias(j,k)
+                        if cambio[0]:
                             minterm_cambio = j[:cambio[1]] + '-' + j[cambio[1]+1:]
                             if n in grupos:
                                 if minterm_cambio not in grupos[n]:
@@ -232,15 +239,13 @@ def main():
                             else:
                                 grupos[n] = [minterm_cambio]
                             debo_parar = False
-                            marcados.add(j) # Marca el elemento j
-                            marcados.add(k) # Marca el elemento k
-
+                            marcados.add(j)
+                            marcados.add(k)
                 n += 1
-            desmarcados_local = set(recorta(temporal)).difference(marcados) # Desmarcar los elementos de cada tabla
-            implicantes = implicantes.union(desmarcados_local) # Agregar el implicante primo a la lista.
-            if debo_parar: # Si los minterminos no pueden ser combinados
-                break # Detener el ciclo
-
+            desmarcados_local = set(recorta(temporal)).difference(marcados)
+            implicantes = implicantes.union(desmarcados_local)
+            if debo_parar:
+                break
         tabla = {}
         for i in implicantes:
             minterminos_mezclados = buscaMinterminos(i)
@@ -250,75 +255,63 @@ def main():
                         tabla[j].append(i)
                 else:
                     tabla[j] = [i]
-
         implicantes_unicos = buscar_implicantes_unicos(tabla)
-
         reducir_tabla = {}
         for i in tabla:
             for j in implicantes_unicos:
                 if j in tabla[i]:
                     reducir_tabla[i] = tabla[i]
-
         nueva_tabla = {}
         for i in tabla:
             if i not in reducir_tabla:
                 nueva_tabla[i] = tabla[i]
-
         dos_marcas = []
         for i in nueva_tabla:
             if len(nueva_tabla[i]) == 2:
                 dos_marcas.append(int(i))
         dos_marcas.sort()
-
         complemento = set()
-        # Llamar a la función 'marcar_todos' para encontrar los implicantes primos esenciales
         marcar_todos(dos_marcas, nueva_tabla, complemento)
-
         formula_final = list(complemento)+implicantes_unicos
         formato_ecuacion = []
         for i in range(len(formula_final)):
             formato_ecuacion.append(convertir(formula_final[i]))
-            
-        # Calcular y formatear los resultados
         resultados = []
         for i in range(len(formato_ecuacion)):
             for j in formato_ecuacion[i]:
                 resultados.append(j)
             if i < len(formato_ecuacion) - 1:
                 resultados.append(" + ")
-
-        # Mostrar los resultados en el widget de etiqueta
         result_label.config(text="Resultados:\n" + "".join(resultados))
-        
-        # Deshabilitar el botón de cálculo
-        calculate_button.config(state=tk.DISABLED)
+    else:
+        result_label.config(text="Por favor, ingrese los minterminos.")
 
-    # Crear una ventana Tkinter
-    root = tk.Tk()
-    root.title("Quine McCluskey")
-    root.geometry("800x600")  # Establecer el tamaño de la ventana
+def reiniciar():
+    input_entry.delete(0, tk.END)
+    result_label.config(text="")
 
-    # Cambiar el color de fondo de la ventana
-    root.configure(bg="#3B13EE")  # Reemplazar "color_de_fondo" con el color que desees, p. ej., "white" o "#FF0000" (rojo)
-    input_label = tk.Label(root, text="Quine McCluskey",justify="center", wraplength=600,bg="#3B13EE",fg="white",font=("Arial", 20))
-    input_label.pack()
-    # Crear y configurar etiqueta de entrada
-    input_label = tk.Label(root, text="Ingrese los minterminos (separados por espacios):",justify="center", wraplength=600,bg="#3B13EE",fg="white",font=("Arial", 15))
-    input_label.pack()
+root = tk.Tk()
+root.title("Quine McCluskey")
+root.geometry("800x600")
 
-    input_entry = tk.Entry(root,width=100)
-    input_entry.pack()
-    # Crear botón para calcular
-    calculate_button = tk.Button(root, text="Calcular", command=calcular)
-    calculate_button.pack()
-    # Crear una etiqueta para mostrar los resultados en el centro de la ventana
-    result_label = tk.Label(root, text="", justify="center", wraplength=600,bg="#3B13EE",fg="white",font=("Arial", 20))
-    result_label.pack(fill="both", expand=True)
+root.configure(bg="#3B13EE")
 
-    # Ejecutar la aplicación Tkinter
-    root.mainloop()
+title_label = tk.Label(root, text="Quine McCluskey", justify="center", wraplength=600, bg="#3B13EE", fg="white", font=("Arial", 20))
+title_label.pack()
 
-#-----------------------------------------------------------
+input_label = tk.Label(root, text="Ingrese los minterminos (separados por espacios):", justify="center", wraplength=600, bg="#3B13EE", fg="white", font=("Arial", 15))
+input_label.pack()
 
-if __name__ == "__main__":
-    main()
+input_entry = tk.Entry(root, width=80,font=("Arial", 10))
+input_entry.pack()
+
+calculate_button = tk.Button(root, text="Calcular", command=calcular)
+calculate_button.pack()
+
+reset_button = tk.Button(root, text="Reiniciar", command=reiniciar)
+reset_button.pack()
+
+result_label = tk.Label(root, text="", justify="center", wraplength=600, bg="#3B13EE", fg="white", font=("Arial", 20))
+result_label.pack(fill="both", expand=True)
+
+root.mainloop()
