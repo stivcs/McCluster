@@ -1,188 +1,216 @@
 import tkinter as tk
-from tkinter import PhotoImage
-from PIL import Image, ImageTk
 
 def recorta(lista):
+    # Inicializa una lista vacía para almacenar elementos recortados.
     elementos_recortados = []
+    
+    # Itera a través de los elementos de la lista de entrada.
     for i in lista:
+        # Extiende la lista 'elementos_recortados' con los elementos de 'lista[i]'.
         elementos_recortados.extend(lista[i])
+    
+    # Devuelve la lista 'elementos_recortados'.
     return elementos_recortados
 
 def buscaMinterminos(mt):
-    guiones = mt.count('-')  # Cuenta cuántos guiones tiene el argumento 'mt'
-    if guiones == 0:
-        return [str(int(mt, 2))]  # Si no tiene ningún guión, devuelve el número decimal que corresponde al binario ingresado
+    # Cuenta cuántos guiones tiene la cadena 'mt'.
+    guiones = mt.count('-')
     
+    # Si no hay guiones en 'mt', convierte 'mt' a decimal y devuelve en una lista.
+    if guiones == 0:
+        return [str(int(mt, 2))]
+    
+    # Crea una lista 'opciones' que contiene representaciones binarias de números con 'guiones' dígitos.
     opciones = [bin(i)[2:].zfill(guiones) for i in range(pow(2, guiones))]
-    # Aquí se crea una lista llamada 'opciones' que contiene representaciones binarias de números en forma de cadenas.
-    # Estos números van desde 0 hasta 2^guiones - 1. 
-    # 'bin(i)[2:]' convierte 'i' a binario y omite el prefijo '0b', y 'zfill(guiones)' rellena con ceros a la izquierda para que tengan la misma longitud que 'mt'.
-
+    
+    # Inicializa una lista temporal.
     temporal = []
+    
+    # Itera a través de las opciones binarias.
     for i in range(pow(2, guiones)):
-        temporal2 = mt[:]  # Crea una copia de 'mt' para modificarla
+        # Crea una copia de 'mt' llamada 'temporal2'.
+        temporal2 = mt[:]
+        
+        # Inicializa una variable 'indice' en -1.
         indice = -1
+        
+        # Itera a través de los dígitos en la primera opción.
         for j in opciones[0]:
+            # Encuentra la siguiente posición de '-' en 'temporal2'.
             if indice != -1:
                 indice += temporal2[indice+1:].find('-') + 1
             else:
                 indice = temporal2[indice+1:].find('-')
-            # Encuentra la siguiente posición de '-' en 'temporal2'
-            # (si ya se encontró uno, se busca después de la última posición encontrada)
+            
+            # Reemplaza el primer '-' encontrado con el valor de 'j' (0 o 1).
             temporal2 = temporal2[:indice] + j + temporal2[indice+1:]
-            # Reemplaza el primer '-' encontrado con el valor de 'j' (0 o 1)
-
+        
+        # Convierte 'temporal2' a decimal y agrega a la lista 'temporal'.
         temporal.append(str(int(temporal2, 2)))
+        
+        # Elimina la primera opción de 'opciones'.
         opciones.pop(0)
-    # Convierte la cadena modificada 'temporal2' a decimal y la agrega a la lista 'temporal'
-    # Luego, elimina la primera opción de 'opciones' para procesar la siguiente iteración.
-
-    return temporal  # Devuelve una lista de minterminos en formato decimal
+    
+    # Devuelve la lista 'temporal' con los minterminos en formato decimal.
+    return temporal
 
 def diferencias(mt1, mt2):
-    contador = 0  # Inicializa un contador para llevar un registro de las diferencias encontradas.
-    indice = 0  # Inicializa una variable 'indice' para rastrear la posición de la diferencia.
-
+    # Inicializa un contador de diferencias en 0.
+    contador = 0
+    
+    # Inicializa una variable 'indice' en 0.
+    indice = 0
+    
+    # Itera a través de los caracteres de 'mt1' y 'mt2'.
     for i in range(len(mt1)):
-        # Itera a través de los índices de las cadenas 'mt1' y 'mt2'.
-        
+        # Compara los caracteres en la misma posición.
         if mt1[i] != mt2[i]:
-            # Compara los caracteres en el mismo índice en ambas cadenas.
-
-            indice = i  # Si los caracteres son diferentes, actualiza 'indice' con la posición de la diferencia.
-            contador += 1  # Incrementa el contador de diferencias en 1.
-
+            # Si son diferentes, actualiza 'indice' con la posición de la diferencia.
+            indice = i
+            # Incrementa el contador de diferencias en 1.
+            contador += 1
+            
+            # Si hay más de una diferencia, retorna (False, -1).
             if contador > 1:
-                # Si se encuentran más de una diferencia, retorna (False, -1).
-                # Esto indica que las cadenas 'mt1' y 'mt2' tienen más de una diferencia y no son adecuadas para el propósito actual.
                 return (False, -1)
-
-    # Después de recorrer ambas cadenas, si el contador de diferencias es igual a 1, significa que hay una sola diferencia.
-    # En ese caso, se devuelve (True, indice) donde 'True' indica que hay una sola diferencia y 'indice' es la posición de la diferencia.
+    
+    # Después de recorrer ambas cadenas, si el contador de diferencias es 1, retorna (True, indice).
     return (True, indice)
 
 def convertir(mintermino):
-    var_formula = []  # Crea una lista vacía para almacenar las variables de la fórmula resultante.
-
+    # Inicializa una lista 'var_formula' para almacenar variables de la fórmula resultante.
+    var_formula = []
+    
+    # Itera a través de los caracteres en 'mintermino'.
     for i in range(len(mintermino)):
-        # Itera a través de los caracteres en la cadena 'mintermino'.
-
+        # Si el carácter es '1', agrega la variable correspondiente (A, B, C, ...) a 'var_formula'.
         if mintermino[i] == '1':
-            # Si el carácter en la posición 'i' es '1', agrega la variable correspondiente a 'var_formula'.
-            # En este caso, utiliza la convención de letras mayúsculas A, B, C, ... para representar las variables.
             var_formula.append(chr(i + 65))  # 65 es el código ASCII de 'A', 66 es el de 'B', y así sucesivamente.
-
+        # Si el carácter es '0', agrega la variable negada (A', B', C', ...) a 'var_formula'.
         elif mintermino[i] == '0':
-            # Si el carácter en la posición 'i' es '0', agrega la variable negada a 'var_formula'.
-            # En este caso, utiliza la misma convención de letras mayúsculas, pero agrega una comilla simple ('), como A', B', C', ...
             var_formula.append(chr(i + 65) + "'")
-
-    return var_formula  # Devuelve la lista de variables de la fórmula resultante.
-
+    
+    # Devuelve la lista 'var_formula' con las variables de la fórmula resultante.
+    return var_formula
 
 def buscar_implicantes_unicos(tabla):
-    implicantes_unicos = []  # Crea una lista vacía para almacenar los implicantes únicos.
-
+    # Inicializa una lista vacía 'implicantes_unicos' para almacenar implicantes únicos.
+    implicantes_unicos = []
+    
+    # Itera a través de las claves (índices) en el diccionario 'tabla'.
     for i in tabla:
-        # Itera a través de las claves (índices) en el diccionario 'tabla'.
-
+        # Verifica si la longitud de la lista en 'tabla[i]' es igual a 1.
         if len(tabla[i]) == 1:
-            # Verifica si la longitud de la lista en 'tabla[i]' es igual a 1.
-            # Esto significa que hay un único implicante en la columna correspondiente a la clave 'i'.
-
+            # Si es 1, verifica si el implicante no está en 'implicantes_unicos'.
             if tabla[i][0] not in implicantes_unicos:
-                # Comprueba si el único implicante encontrado no está en la lista 'implicantes_unicos'.
-                # Si no está en la lista, lo agrega.
+                # Agrega el implicante a 'implicantes_unicos'.
                 implicantes_unicos.append(tabla[i][0])
-
+    
+    # Devuelve la lista 'implicantes_unicos' con los implicantes únicos encontrados.
     return implicantes_unicos
+
 def ingresar_minterminos():
+    # Imprime un encabezado.
     print("\nQUINE MCCLUSKEY\n")
     print("Ingrese los términos separados por un espacio. \n")
+    
+    # Lee la entrada del usuario y la convierte en una lista de enteros.
     mt = [int(i) for i in input("Ingrese los mintérminos: ").strip().split()]
-    mt.sort()  # Ordenamos los minterminos
+    
+    # Ordena los minterminos.
+    mt.sort()
+    
+    # Devuelve la lista ordenada.
     return mt
-#-----------------------------------------------------
-'''
-    Contamos el número de unos en cada mintermino, luego guardamos el equivalente binario desde la posicion 2 para evitar '0b' que agrega la funcion
-    seguido lo metemos en una cadena y rellenamos con ceros a la izquierda equivalentes al mintermino más grande. Despues validamos si ya existe
-    una clave con ese número de unos, si ya existe simplemente agregamos el mintermino al grupo con esa clave, de lo contrario se crea la clave y
-    se introduce de igual manera.
-'''
+
 def agrupar_minterminos(minterminos):
+    # Calcula el número máximo de dígitos en los minterminos.
     max_minterm = len(bin(minterminos[-1])) - 2
+    
+    # Inicializa un diccionario 'grupos' para agrupar minterminos por cantidad de unos.
     grupos = {}
-
+    
+    # Itera a través de los minterminos.
     for minterm in minterminos:
+        # Cuenta la cantidad de unos en el mintermino.
         count = bin(minterm).count('1')
+        
+        # Convierte el mintermino a una cadena binaria y rellena con ceros a la izquierda.
         minterm_str = bin(minterm)[2:].zfill(max_minterm)
-
+        
+        # Agrega el mintermino a la lista correspondiente en el diccionario 'grupos'.
         if count in grupos:
             grupos[count].append(minterm_str)
         else:
             grupos[count] = [minterm_str]
-
+    
+    # Devuelve el diccionario 'grupos' con los minterminos agrupados.
     return grupos
+
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def marcar_todos(dos, tabla, confirmados):
+    # Verifica si la tabla no está vacía
     if len(tabla) > 0:
+        # Ordena la lista 'dos' en orden ascendente
         dos.sort()
+        # Crea una copia temporal de 'dos' como un conjunto
         temporal = set(dos)
+        # Crea una copia de la tabla original
         nueva_tabla = dict(tabla)
+        # Itera a través de los elementos en 'dos'
         for i in dos:
+            # Obtiene las dos opciones asociadas a 'i' desde la tabla
             opciones = tabla[str(i)]
             x = -1
             y = -1
+            # Busca en la tabla si las opciones[0] o opciones[1] están presentes en otra clave diferente a 'i'
             for j in tabla:
                 if (opciones[0] in tabla[j]) and (str(i) != j):
                     x = j
                 elif (opciones[1] in tabla[j]) and (str(i) != j):
                     y = j
+            # Si 'x' e 'y' son -1, significa que ninguna opción está presente en otra clave
             if int(x) == -1 and int(y) == -1:
                 confirmados.add(opciones[0])
+            # Si 'x' es -1 pero 'y' es mayor que 0, se agrega opciones[1] a los confirmados y se elimina 'y' de la nueva tabla
             elif int(x) == -1 and int(y) > 0:
                 confirmados.add(opciones[1])
                 nueva_tabla.pop(y)
+            # Si 'y' es -1 pero 'x' es mayor que 0, se agrega opciones[0] a los confirmados y se elimina 'x' de la nueva tabla
             elif int(y) == -1 and int(x) > 0:
                 confirmados.add(opciones[0])
-                nueva_tabla.pop(x)       
+                nueva_tabla.pop(x)
+            # Si 'x' e 'y' son diferentes de -1, compara las longitudes de las listas asociadas a 'x' e 'y' en la tabla
             elif len(tabla[str(x)]) > len(tabla[str(y)]):
+                # Si la lista de 'x' es más larga, se agrega opciones[0] a los confirmados y se elimina 'x' de la nueva tabla
                 confirmados.add(opciones[0])
                 nueva_tabla.pop(x)
             elif len(tabla[str(x)]) < len(tabla[str(y)]):
+                # Si la lista de 'y' es más larga, se agrega opciones[1] a los confirmados y se elimina 'y' de la nueva tabla
                 confirmados.add(opciones[1])
                 nueva_tabla.pop(y)
+            # Se elimina 'i' de 'temporal' y 'i' de 'nueva_tabla'
             temporal.discard(i)
-            nueva_tabla.pop(str(i))    
-            marcar_todos(list(temporal),nueva_tabla,confirmados)
+            nueva_tabla.pop(str(i))
+            # Llamada recursiva a 'marcar_todos' con los elementos restantes en 'temporal' y la nueva tabla
+            marcar_todos(list(temporal), nueva_tabla, confirmados)
+            # Se rompe el bucle para evitar procesar 'dos' nuevamente
             break
-    return confirmados 
+    return confirmados
 #------------------------------------------------------------------------------------------------------
-def mostrar_resultados(resultados):
-    # Crea una nueva ventana para mostrar los resultados
-    result_window = tk.Toplevel()
-    result_window.title("Resultados")
-    result_window.geometry("800x600")  # Establece el tamaño de la ventana
-
-    # Crea un widget de área de texto para mostrar los resultados con desplazamiento
-    result_text = tk.Text(result_window, wrap=tk.WORD)
-    result_text.pack(fill=tk.BOTH, expand=True)
-
-    # Inserta los resultados en el widget de área de texto
-    result_text.insert(tk.END, resultados)
-
-
 def main():
+    # Definición de una función interna llamada 'calcular' para realizar el cálculo principal.
     def calcular():
+        # Leer los minterminos desde la entrada del usuario, convertirlos a una lista de enteros y ordenarlos.
         mt = [int(i) for i in input_entry.get().strip().split()]
         mt.sort()
         minterminos = mt
         implicantes = set()
 
-        # Comenzamos la agrupación primaria
+        # Comenzar la agrupación primaria
         # agrupar_minterminos
         grupos = agrupar_minterminos(minterminos)
-        # Término de la agrupación primaria
+        # Fin de la agrupación primaria
 
         # Proceso para crear las tablas y encontrar los implicantes primos 
         while True:
@@ -195,8 +223,8 @@ def main():
             for i in range(len(lclaves)-1):
                 for j in temporal[lclaves[i]]: # Iteración a través del grupo de elementos actual 
                     for k in temporal[lclaves[i+1]]: # Iteración a través del siguiente grupo de elementos
-                        cambio = diferencias(j,k) # Comparamos los mintérminos
-                        if cambio[0]: # Si los mintérminos difieren solamente en un bit
+                        cambio = diferencias(j,k) # Comparamos los minterminos
+                        if cambio[0]: # Si los minterminos difieren solamente en un bit
                             minterm_cambio = j[:cambio[1]] + '-' + j[cambio[1]+1:]
                             if n in grupos:
                                 if minterm_cambio not in grupos[n]:
@@ -208,10 +236,10 @@ def main():
                             marcados.add(k) # Marca el elemento k
 
                 n += 1
-            desmarcados_local = set(recorta(temporal)).difference(marcados) # Desmarcamos los elementos de cada tabla
-            implicantes = implicantes.union(desmarcados_local) # Agregamos el implicante primo a la lista.
-            if debo_parar: # Si los mintérminos no pueden ser combinados
-                break #Detenemos el ciclo
+            desmarcados_local = set(recorta(temporal)).difference(marcados) # Desmarcar los elementos de cada tabla
+            implicantes = implicantes.union(desmarcados_local) # Agregar el implicante primo a la lista.
+            if debo_parar: # Si los minterminos no pueden ser combinados
+                break # Detener el ciclo
 
         tabla = {}
         for i in implicantes:
@@ -242,9 +270,8 @@ def main():
                 dos_marcas.append(int(i))
         dos_marcas.sort()
 
-            
-                
         complemento = set()
+        # Llamar a la función 'marcar_todos' para encontrar los implicantes primos esenciales
         marcar_todos(dos_marcas, nueva_tabla, complemento)
 
         formula_final = list(complemento)+implicantes_unicos
@@ -269,14 +296,14 @@ def main():
     # Crear una ventana Tkinter
     root = tk.Tk()
     root.title("Quine McCluskey")
-    root.geometry("800x600")  # Establece el tamaño de la ventana
+    root.geometry("800x600")  # Establecer el tamaño de la ventana
 
     # Cambiar el color de fondo de la ventana
-    root.configure(bg="#3B13EE")  # Reemplaza "color_de_fondo" con el color que desees, p. ej., "white" o "#FF0000" (rojo)
+    root.configure(bg="#3B13EE")  # Reemplazar "color_de_fondo" con el color que desees, p. ej., "white" o "#FF0000" (rojo)
     input_label = tk.Label(root, text="Quine McCluskey",justify="center", wraplength=600,bg="#3B13EE",fg="white",font=("Arial", 20))
     input_label.pack()
     # Crear y configurar etiqueta de entrada
-    input_label = tk.Label(root, text="Ingrese los mintérminos (separados por espacios):",justify="center", wraplength=600,bg="#3B13EE",fg="white",font=("Arial", 15))
+    input_label = tk.Label(root, text="Ingrese los minterminos (separados por espacios):",justify="center", wraplength=600,bg="#3B13EE",fg="white",font=("Arial", 15))
     input_label.pack()
 
     input_entry = tk.Entry(root,width=100)
@@ -290,6 +317,7 @@ def main():
 
     # Ejecutar la aplicación Tkinter
     root.mainloop()
+
 #-----------------------------------------------------------
 
 if __name__ == "__main__":
