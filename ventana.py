@@ -1,17 +1,10 @@
-#recorta(lista)
-#   funcion que recibe una lista de listas : [[1,2],[3,4]]
-#   y devuelve una sola lista : [1,2,3,4]
+import tkinter as tk
 
 def recorta(lista):
     elementos_recortados = []
     for i in lista:
         elementos_recortados.extend(lista[i])
     return elementos_recortados
-
-# buscaMinterminos(mt)
-#   funcion que recibe una cadena de tipo "10-1" y devuelve todas sus posibles conbinaciones
-#   return : ["1001","1011"]
-# 
 
 def buscaMinterminos(mt):
     guiones = mt.count('-')  # Cuenta cuántos guiones tiene el argumento 'mt'
@@ -163,116 +156,135 @@ def marcar_todos(dos, tabla, confirmados):
             break
     return confirmados 
 #------------------------------------------------------------------------------------------------------
+def mostrar_resultados(resultados):
+    # Crea una nueva ventana para mostrar los resultados
+    result_window = tk.Toplevel()
+    result_window.title("Resultados")
+    result_window.geometry("800x600")  # Establece el tamaño de la ventana
+
+    # Crea un widget de área de texto para mostrar los resultados con desplazamiento
+    result_text = tk.Text(result_window, wrap=tk.WORD)
+    result_text.pack(fill=tk.BOTH, expand=True)
+
+    # Inserta los resultados en el widget de área de texto
+    result_text.insert(tk.END, resultados)
+
+
 def main():
-    mt = ingresar_minterminos()
-    #---------------------------------------
-    minterminos = mt
-    implicantes = set()
+    def calcular():
+        mt = [int(i) for i in input_entry.get().strip().split()]
+        mt.sort()
+        minterminos = mt
+        implicantes = set()
 
-    # Comenzamos la agrupación primaria
-    # agrupar_minterminos
-    grupos = agrupar_minterminos(minterminos)
-    # Término de la agrupación primaria
+        # Comenzamos la agrupación primaria
+        # agrupar_minterminos
+        grupos = agrupar_minterminos(minterminos)
+        # Término de la agrupación primaria
 
-    # Proceso para crear las tablas y encontrar los implicantes primos 
-    while True:
-        temporal = grupos.copy()
-        grupos = {}
-        n = 0
-        marcados = set()
-        debo_parar = True
-        lclaves = sorted(list(temporal.keys()))
-        for i in range(len(lclaves)-1):
-            for j in temporal[lclaves[i]]: # Iteración a través del grupo de elementos actual 
-                for k in temporal[lclaves[i+1]]: # Iteración a través del siguiente grupo de elementos
-                    cambio = diferencias(j,k) # Comparamos los mintérminos
-                    if cambio[0]: # Si los mintérminos difieren solamente en un bit
-                        minterm_cambio = j[:cambio[1]] + '-' + j[cambio[1]+1:]
-                        if n in grupos:
-                            if minterm_cambio not in grupos[n]:
-                                grupos[n].append(minterm_cambio)
-                        else:
-                            grupos[n] = [minterm_cambio]
-                        debo_parar = False
-                        marcados.add(j) # Marca el elemento j
-                        marcados.add(k) # Marca el elemento k
+        # Proceso para crear las tablas y encontrar los implicantes primos 
+        while True:
+            temporal = grupos.copy()
+            grupos = {}
+            n = 0
+            marcados = set()
+            debo_parar = True
+            lclaves = sorted(list(temporal.keys()))
+            for i in range(len(lclaves)-1):
+                for j in temporal[lclaves[i]]: # Iteración a través del grupo de elementos actual 
+                    for k in temporal[lclaves[i+1]]: # Iteración a través del siguiente grupo de elementos
+                        cambio = diferencias(j,k) # Comparamos los mintérminos
+                        if cambio[0]: # Si los mintérminos difieren solamente en un bit
+                            minterm_cambio = j[:cambio[1]] + '-' + j[cambio[1]+1:]
+                            if n in grupos:
+                                if minterm_cambio not in grupos[n]:
+                                    grupos[n].append(minterm_cambio)
+                            else:
+                                grupos[n] = [minterm_cambio]
+                            debo_parar = False
+                            marcados.add(j) # Marca el elemento j
+                            marcados.add(k) # Marca el elemento k
 
-            n += 1
-        desmarcados_local = set(recorta(temporal)).difference(marcados) # Desmarcamos los elementos de cada tabla
-        implicantes = implicantes.union(desmarcados_local) # Agregamos el implicante primo a la lista.
-        if debo_parar: # Si los mintérminos no pueden ser combinados
-            break #Detenemos el ciclo
-    '''
-        El fragmento de código es un bucle que itera sobre la lista de implicantes. Para cada implicante genera una lista de minterminos mezclados
-        llamando a la función buscaMinterminos. Luego, verifica si cada mintermino de la lista ya existe en el diccionario de tabla.
-        Si es así, agrega el implicante a la lista de valores para esa clave. Si el mintermino no existe, crea un nuevo par clave-valor en el diccionario
-        de tabla con el mintermino valor y el implicante como clave.
-    '''
+                n += 1
+            desmarcados_local = set(recorta(temporal)).difference(marcados) # Desmarcamos los elementos de cada tabla
+            implicantes = implicantes.union(desmarcados_local) # Agregamos el implicante primo a la lista.
+            if debo_parar: # Si los mintérminos no pueden ser combinados
+                break #Detenemos el ciclo
 
-    tabla = {}
-    for i in implicantes:
-        minterminos_mezclados = buscaMinterminos(i)
-        for j in minterminos_mezclados:
-            if j in tabla:
-                if i not in tabla[j]:
-                    tabla[j].append(i)
-            else:
-                tabla[j] = [i]
+        tabla = {}
+        for i in implicantes:
+            minterminos_mezclados = buscaMinterminos(i)
+            for j in minterminos_mezclados:
+                if j in tabla:
+                    if i not in tabla[j]:
+                        tabla[j].append(i)
+                else:
+                    tabla[j] = [i]
 
-    """
-        Este fragmento de código busca elementos únicos y compartidos en dos listas.
+        implicantes_unicos = buscar_implicantes_unicos(tabla)
 
-        Entradas:
-        - implicantes_unicos: Una lista de elementos únicos.
-        - dos_implicantes: Una lista de elementos con exactamente dos elementos.
-        - tabla: Diccionario que representa una tabla con claves como nombres de columnas y valores como listas de implicantes en cada columna.
+        reducir_tabla = {}
+        for i in tabla:
+            for j in implicantes_unicos:
+                if j in tabla[i]:
+                    reducir_tabla[i] = tabla[i]
 
-        Salidas:
-        - compartidos: Conjunto que contiene los elementos de dos_implicantes que tienen al menos un elemento en implicantes_unicos.
-        - independientes: Conjunto que contiene los elementos de dos_implicantes que no tienen ningún elemento en implicantes_unicos.
+        nueva_tabla = {}
+        for i in tabla:
+            if i not in reducir_tabla:
+                nueva_tabla[i] = tabla[i]
 
-    """
-    implicantes_unicos = buscar_implicantes_unicos(tabla)
+        dos_marcas = []
+        for i in nueva_tabla:
+            if len(nueva_tabla[i]) == 2:
+                dos_marcas.append(int(i))
+        dos_marcas.sort()
 
-    reducir_tabla = {}
-    for i in tabla:
-        for j in implicantes_unicos:
-            if j in tabla[i]:
-                reducir_tabla[i] = tabla[i]
+            
+                
+        complemento = set()
+        marcar_todos(dos_marcas, nueva_tabla, complemento)
 
-    nueva_tabla = {}
-    for i in tabla:
-        if i not in reducir_tabla:
-            nueva_tabla[i] = tabla[i]
+        formula_final = list(complemento)+implicantes_unicos
+        formato_ecuacion = []
+        for i in range(len(formula_final)):
+            formato_ecuacion.append(convertir(formula_final[i]))
+            
+        # Calcular y formatear los resultados
+        resultados = []
+        for i in range(len(formato_ecuacion)):
+            for j in formato_ecuacion[i]:
+                resultados.append(j)
+            if i < len(formato_ecuacion) - 1:
+                resultados.append(" + ")
 
-    dos_marcas = []
-    for i in nueva_tabla:
-        if len(nueva_tabla[i]) == 2:
-            dos_marcas.append(int(i))
-    dos_marcas.sort()
+        # Mostrar los resultados en el mismo widget de entrada
+        input_entry.delete(0, tk.END)  # Borra el contenido del widget de entrada
+        input_entry.insert(0, "".join(resultados))  # Inserta resultados en el widget de entrada
 
-    
-        
-    complemento = set()
-    marcar_todos(dos_marcas, nueva_tabla, complemento)
+        # Deshabilitar el botón de cálculo
+        calculate_button.config(state=tk.DISABLED)
 
-    formula_final = list(complemento)+implicantes_unicos
-    formato_ecuacion = []
-    for i in range(len(formula_final)):
-        formato_ecuacion.append(convertir(formula_final[i]))
-        
-    #VAMOS A IMPRIMIR EL RESULTADO
-    print("\nSOLUCION: \n")
-    for i in range(len(formato_ecuacion)):
-        for j in formato_ecuacion[i]:
-            print(j, end = '')
-        if i < len(formato_ecuacion)-1:
-            print(" + ", end = '')    
-    print("\n")
+    # Crear una ventana Tkinter
+    root = tk.Tk()
+    root.title("Quine McCluskey")
+    root.geometry("800x600")  # Establece el tamaño de la ventana
 
-main()
-#EJEMPLOS DE ENTRADAS
-#Tambien se pueden ingresar en desorden, es indiferente.
-# 1 2 3 4 5
-# 1 4 6 7 8 9 10 11 15
-# 0 1 3 4 6 7 9 10 11 12 15 16 23 24 25 26 27
+    # Crear y configurar etiqueta de entrada
+    input_label = tk.Label(root, text="Resultados:")
+    input_label.pack()
+
+    # Crear un widget de entrada de datos más grande para los resultados
+    input_entry = tk.Entry(root, width=80)
+    input_entry.pack()
+
+    # Crear botón para calcular
+    calculate_button = tk.Button(root, text="Calcular", command=calcular)
+    calculate_button.pack()
+
+    # Ejecutar la aplicación Tkinter
+    root.mainloop()
+#-----------------------------------------------------------
+
+if __name__ == "__main__":
+    main()
