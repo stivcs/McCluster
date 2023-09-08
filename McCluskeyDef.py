@@ -1,4 +1,7 @@
 import tkinter as tk
+from tkinter import ttk  # Importa ttk para estilos mejorados
+from tkinter import messagebox
+from tabulate import tabulate
 
 def recorta(lista):
     # Inicializa una lista vacía para almacenar elementos recortados.
@@ -150,7 +153,6 @@ def agrupar_minterminos(minterminos):
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def marcar_todos(dos, tabla, confirmados):
     # Verifica si la tabla no está vacía
-    if len(tabla) > 0:
         # Ordena la lista 'dos' en orden ascendente
         dos.sort()
         # Crea una copia temporal de 'dos' como un conjunto
@@ -194,9 +196,9 @@ def marcar_todos(dos, tabla, confirmados):
             nueva_tabla.pop(str(i))
             # Llamada recursiva a 'marcar_todos' con los elementos restantes en 'temporal' y la nueva tabla
             marcar_todos(list(temporal), nueva_tabla, confirmados)
-            # Se rompe el bucle para evitar procesar 'dos' nuevamente
-            break
-    return confirmados
+            # Se rompe el bucle para evitar procesar 'dos' nuevamente        
+            break    
+        return confirmados
 
 #---------------------------------------------------------------------------------------------------
 def es_entero(numero):
@@ -256,33 +258,64 @@ def calcular():
                 else:
                     tabla[j] = [i]
         implicantes_unicos = buscar_implicantes_unicos(tabla)
-        reducir_tabla = {}
-        for i in tabla:
-            for j in implicantes_unicos:
-                if j in tabla[i]:
-                    reducir_tabla[i] = tabla[i]
-        nueva_tabla = {}
-        for i in tabla:
-            if i not in reducir_tabla:
-                nueva_tabla[i] = tabla[i]
-        dos_marcas = []
-        for i in nueva_tabla:
-            if len(nueva_tabla[i]) == 2:
-                dos_marcas.append(int(i))
-        dos_marcas.sort()
-        complemento = set()
-        marcar_todos(dos_marcas, nueva_tabla, complemento)
-        formula_final = list(complemento)+implicantes_unicos
-        formato_ecuacion = []
-        for i in range(len(formula_final)):
-            formato_ecuacion.append(convertir(formula_final[i]))
-        resultados = []
-        for i in range(len(formato_ecuacion)):
-            for j in formato_ecuacion[i]:
-                resultados.append(j)
-            if i < len(formato_ecuacion) - 1:
-                resultados.append(" + ")
-        result_label.config(text="Resultados:\n" + "".join(resultados))
+        if len(implicantes_unicos) == 1 and not("0" in implicantes_unicos[0] or "1" in implicantes_unicos[0]):
+            result_label.config(text="Resultados:\n 1" )
+            formato_extendido = ["Terminos"]
+            for i in minterminos:
+                formato_extendido.append(str(i))
+            longitud_formato = len(formato_extendido[1:])
+            implicante_vacio = [implicantes_unicos[0]]
+            for i in range(longitud_formato):
+                implicante_vacio.append("X")
+            print(tabulate([implicante_vacio], headers=formato_extendido))
+            print("\n")
+            return
+        else:
+            formato_extendido = ["Terminos"]
+            for i in minterminos:
+                formato_extendido.append(str(i)) 
+            longitud_formato = len(formato_extendido[1:])
+            implicante_lista = []
+            for i in implicantes:
+                temporal = ["".join(convertir(i))]
+                for j in minterminos:
+                    if i in tabla[str(j)]:
+                        temporal.append("X")
+                    else:
+                         temporal.append(" ")   
+                
+                implicante_lista.append(temporal)
+            #print(implicante_lista)
+            print(tabulate(implicante_lista, headers=formato_extendido))
+            print("\n")    
+            reducir_tabla = {}
+            for i in tabla:
+                for j in implicantes_unicos:
+                    if j in tabla[i]:
+                        reducir_tabla[i] = tabla[i]
+            nueva_tabla = {}
+            for i in tabla:
+                if i not in reducir_tabla:
+                    nueva_tabla[i] = tabla[i]
+            dos_marcas = []
+            for i in nueva_tabla:
+                if len(nueva_tabla[i]) == 2:
+                    dos_marcas.append(int(i))
+            dos_marcas.sort()
+            complemento = set()
+            marcar_todos(dos_marcas, nueva_tabla, complemento)
+            formula_final = list(complemento)+implicantes_unicos
+            formato_ecuacion = []
+            for i in range(len(formula_final)):
+                formato_ecuacion.append(convertir(formula_final[i]))
+            resultados = []
+            for i in range(len(formato_ecuacion)):
+                for j in formato_ecuacion[i]:
+                    resultados.append(j)
+                if i < len(formato_ecuacion) - 1:
+                    resultados.append(" + ")
+
+            result_label.config(text="Resultados:\n" + "".join(resultados))
     else:
         result_label.config(text="Por favor, ingrese los minterminos.")
 
@@ -294,24 +327,47 @@ root = tk.Tk()
 root.title("Quine McCluskey")
 root.geometry("800x600")
 
-root.configure(bg="#3B13EE")
+color = "#2B023C"
+root.configure(bg=color)
 
-title_label = tk.Label(root, text="Quine McCluskey", justify="center", wraplength=600, bg="#3B13EE", fg="white", font=("Arial", 20))
+title_label = tk.Label(root, text="Quine McCluskey", justify="center", wraplength=600, bg=color, fg="white", font=("Arial", 20))
 title_label.pack()
 
-input_label = tk.Label(root, text="Ingrese los minterminos (separados por espacios):", justify="center", wraplength=600, bg="#3B13EE", fg="white", font=("Arial", 15))
+input_label = tk.Label(root, text="Ingrese los minterminos (separados por espacios):", justify="center", wraplength=600, bg=color, fg="white", font=("Arial", 15))
 input_label.pack()
 
-input_entry = tk.Entry(root, width=80,font=("Arial", 10))
-input_entry.pack()
+frame = tk.Frame(root,bg=color)
+frame.pack()
 
-calculate_button = tk.Button(root, text="Calcular", command=calcular)
-calculate_button.pack()
+# Texto antes del input
+label_before = tk.Label(frame, text="(", bg=color, fg="white", font=("Arial", 20))
+label_before.pack(side=tk.LEFT)
 
-reset_button = tk.Button(root, text="Reiniciar", command=reiniciar)
-reset_button.pack()
+# Widget de entrada
+input_entry = tk.Entry(frame, width=60, font=("Arial", 10))
+input_entry.pack(side=tk.LEFT)
 
-result_label = tk.Label(root, text="", justify="center", wraplength=600, bg="#3B13EE", fg="white", font=("Arial", 20))
+# Texto después del input
+label_after = tk.Label(frame, text=" )", bg=color, fg="white", font=("Arial", 20))
+label_after.pack(side=tk.LEFT)
+
+# calculate_button = tk.Button(root, text="Calcular", command=calcular)
+# calculate_button.pack()
+
+# reset_button = tk.Button(root, text="Reiniciar", command=reiniciar)
+# reset_button.pack()
+
+# Cambia el estilo del botón
+style = ttk.Style()
+style.configure("Custom.TButton", background="#3498db", foreground="black", font=("Arial", 12))
+
+calculate_button = ttk.Button(root, text="Calcular", command=calcular, style="Custom.TButton")
+calculate_button.pack(pady=10)
+
+reset_button = ttk.Button(root, text="Reiniciar", command=reiniciar, style="Custom.TButton")
+reset_button.pack(pady=10)
+
+result_label = tk.Label(root, text="", justify="center", wraplength=600, bg=color, fg="white", font=("Arial", 20))
 result_label.pack(fill="both", expand=True)
 
 root.mainloop()
