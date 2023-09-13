@@ -152,53 +152,39 @@ def agrupar_minterminos(minterminos):
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 def marcar_todos(dos, tabla, confirmados):
-    # Verifica si la tabla no está vacía
-        # Ordena la lista 'dos' en orden ascendente
+    if len(tabla) > 0:
         dos.sort()
-        # Crea una copia temporal de 'dos' como un conjunto
         temporal = set(dos)
-        # Crea una copia de la tabla original
         nueva_tabla = dict(tabla)
-        # Itera a través de los elementos en 'dos'
         for i in dos:
-            # Obtiene las dos opciones asociadas a 'i' desde la tabla
             opciones = tabla[str(i)]
             x = -1
             y = -1
-            # Busca en la tabla si las opciones[0] o opciones[1] están presentes en otra clave diferente a 'i'
             for j in tabla:
                 if (opciones[0] in tabla[j]) and (str(i) != j):
                     x = j
                 elif (opciones[1] in tabla[j]) and (str(i) != j):
                     y = j
-            # Si 'x' e 'y' son -1, significa que ninguna opción está presente en otra clave
             if int(x) == -1 and int(y) == -1:
                 confirmados.add(opciones[0])
-            # Si 'x' es -1 pero 'y' es mayor que 0, se agrega opciones[1] a los confirmados y se elimina 'y' de la nueva tabla
             elif int(x) == -1 and int(y) > 0:
                 confirmados.add(opciones[1])
                 nueva_tabla.pop(y)
-            # Si 'y' es -1 pero 'x' es mayor que 0, se agrega opciones[0] a los confirmados y se elimina 'x' de la nueva tabla
             elif int(y) == -1 and int(x) > 0:
                 confirmados.add(opciones[0])
-                nueva_tabla.pop(x)
-            # Si 'x' e 'y' son diferentes de -1, compara las longitudes de las listas asociadas a 'x' e 'y' en la tabla
+                nueva_tabla.pop(x)       
             elif len(tabla[str(x)]) > len(tabla[str(y)]):
-                # Si la lista de 'x' es más larga, se agrega opciones[0] a los confirmados y se elimina 'x' de la nueva tabla
                 confirmados.add(opciones[0])
                 nueva_tabla.pop(x)
             elif len(tabla[str(x)]) < len(tabla[str(y)]):
-                # Si la lista de 'y' es más larga, se agrega opciones[1] a los confirmados y se elimina 'y' de la nueva tabla
                 confirmados.add(opciones[1])
                 nueva_tabla.pop(y)
-            # Se elimina 'i' de 'temporal' y 'i' de 'nueva_tabla'
             temporal.discard(i)
-            nueva_tabla.pop(str(i))
-            # Llamada recursiva a 'marcar_todos' con los elementos restantes en 'temporal' y la nueva tabla
-            marcar_todos(list(temporal), nueva_tabla, confirmados)
-            # Se rompe el bucle para evitar procesar 'dos' nuevamente        
-            break    
-        return confirmados
+            nueva_tabla.pop(str(i))    
+            marcar_todos(list(temporal),nueva_tabla,confirmados)
+            break
+    return confirmados
+
 
 #---------------------------------------------------------------------------------------------------
 def es_entero(numero):
