@@ -218,6 +218,8 @@ def calcular():
             else:
                 result_label.config(text="Por favor, ingrese Datos validos")
                 return  # Salir de la función si se ingresa un valor no válido
+        minterminos = set(minterminos)
+        minterminos = list(minterminos)
         minterminos.sort()
         # minterminos = mt
         implicantes = set()
